@@ -39,35 +39,9 @@ class Raumod::XM::Module
       pattern = Raumod::XM::Pattern.new
       puts "Reading stuff @#{offset+bytes_read}"
       bytes_read+=pattern.load_bin(data[offset+bytes_read..-1])
-      @patterns << pattern
-      next
-      
-      pattern = @patterns[i] = Micromod::XM::Pattern.new      
-      raise 'Unknown pattern packing type!' unless data[offset+4] == 0
-      pattern.num_rows = ushort(data,offset+5)
-      patlen = ushort(data,offset+7)
-      num_notes = pattern.num_rows * @num_channels
-      pattern.data=[]
-      offset += intle(data,offset)# set offset to beginning of pattern data(offset+pattern header length.)
-      next_offset = offset + patlen
-      
-      next if patlen > 0 #Empty pattern, continue.
-      pattern_offset = 0
-      num_notes.times do |i|
-        flags = data[offset]
-        if (flags & 0x80) == 0 
-          flags = 0x1f
-        else
-          offset+=1
-        end
-        5.times do |n|
-          b= (flags&1)>0 ? data[offset+=1] : 0
-          pattern.data.push b
-          flags = flags >> 1
-        end
-      end
-      offset = next_offset
+      @patterns << pattern      
     end
+    nil
   end
   private
   
