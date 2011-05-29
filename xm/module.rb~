@@ -1,4 +1,4 @@
-class Raumod::XM::Module
+class Micromod::XM::Module
   attr_accessor :song_name, :num_channels,:num_instruments, :num_patterns,
   :sequence_length, :restart_pos, :default_speed, :default_tempo, :linear_periods,
   :sequence, :patterns, :instruments
@@ -36,7 +36,7 @@ class Raumod::XM::Module
     @patterns=[]
     bytes_read=0
     @num_patterns.times do |i|      
-      pattern = Raumod::XM::Pattern.new
+      pattern = Micromod::XM::Pattern.new
       puts "Reading stuff @#{offset+bytes_read}"
       bytes_read+=pattern.load_bin(data[offset+bytes_read..-1])
       @patterns << pattern
