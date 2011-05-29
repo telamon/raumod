@@ -1,4 +1,4 @@
-module Micromod
+module Raumod
   module XM; end;
     
 end

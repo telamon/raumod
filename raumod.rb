@@ -1,5 +1,5 @@
 module Raumod
-  module XM; end;
+  module XM; end; # http://16-bits.org/xm/
     
 end
 require 'xm/module.rb'
