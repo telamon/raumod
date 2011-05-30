@@ -1,10 +1,18 @@
 class Raumod::XM::Sample
+  include Raumod::HeaderReader
+  def header_map
+    {
+      :sample_length => {:offset=>0,:type=>'V'}
+    }
+  end
   def initialize
   end
-  def load_bin(data)
-    header_length= data.unpack('V').first
-    @header=data[0..header_length]
-    sample_length=data[header_length..-1].unpack('V').first
-    header_length+sample_length
+  def load_header_bin(data)
+    header_length =18 #= data.unpack('V').first
+    @header=data[0..header_length]    
+    header_length
+  end
+  def load_data_bin(data)
+    sample_length
   end
 end

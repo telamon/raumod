@@ -1,5 +1,6 @@
 class Raumod::XM::Instrument
   include Raumod::HeaderReader
+  require 'xm/sample'
   attr_accessor :samples
   def header_map 
     {
@@ -23,10 +24,15 @@ class Raumod::XM::Instrument
     off=header_length
     puts "SampleCount:" + sample_count.to_s
     @samples=[]
+    # Load all headers
     sample_count.times do |i|
       sample = Raumod::XM::Sample.new
-      off+=sample.load_bin(data[off..-1])
-      @samples << sample
+      off+=sample.load_header_bin(data[off..-1])
+      @samples << sample      
+    end
+    # Load all sample data
+    sample_count.times do |i|
+      off+=@samples[i].load_data_bin(data[off..-1])
     end
     puts "returning with #{off}"
     off
