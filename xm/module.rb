@@ -1,4 +1,6 @@
 class Raumod::XM::Module
+  require 'xm/pattern'
+  require 'xm/instrument'
   attr_accessor :song_name, :num_channels,:num_instruments, :num_patterns,
   :sequence_length, :restart_pos, :default_speed, :default_tempo, :linear_periods,
   :sequence, :patterns, :instruments
@@ -25,7 +27,7 @@ class Raumod::XM::Module
     raise 'XM format version must be 0x0104' unless ushort(data,58) == 0x104
     delta_env = data[38..57] == 'DigiBooster Pro'
     header = data[60..79].unpack('Vvvvvvvvv')
-    offset = 60 + header[0]    
+    data_offset = 60 + header[0]    
     @sequence_length ,@restart_pos,@num_channels,@num_patterns,@num_instruments,
     @linear_periods, @default_speed,@default_tempo= header[1..-1]
     @sequence = []
@@ -34,12 +36,19 @@ class Raumod::XM::Module
       @sequence[i] = entry < num_patterns ? entry : 0      
     end
     @patterns=[]
-    bytes_read=0
+    bytes_read=data_offset
     @num_patterns.times do |i|      
       pattern = Raumod::XM::Pattern.new
-      puts "Reading stuff @#{offset+bytes_read}"
-      bytes_read+=pattern.load_bin(data[offset+bytes_read..-1])
+      puts "Loading pattern @#{bytes_read}"
+      bytes_read+=pattern.load_bin(data[bytes_read..-1])
       @patterns << pattern      
+    end
+    @instruments=[]
+    @num_instruments.times do |i|
+      instrument = Raumod::XM::Instrument.new
+      puts "Loading Instrument @#{bytes_read}"
+      bytes_read+=instrument.load_bin(data[bytes_read..-1])
+      @instruments << instrument
     end
     nil
   end

@@ -1,7 +1,11 @@
 class Raumod::XM::Pattern
+  require 'xm/note'
   attr_accessor :channels
   def initialize(channels=4)
     @channels=channels.times.map{[]}
+  end
+  def inspect
+    "#<Raumod::XM::Pattern ch_count:#{@channels.count} >"
   end
   def load_bin(data)
     header_length= data.unpack('V').first
