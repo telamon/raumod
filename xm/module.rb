@@ -1,28 +1,42 @@
 class Raumod::XM::Module
-  require 'xm/pattern'
-  require 'xm/instrument'
-  attr_accessor :song_name, :num_channels,:num_instruments, :num_patterns,
-  :sequence_length, :restart_pos, :default_speed, :default_tempo, :linear_periods,
-  :sequence, :patterns, :instruments
-  def initialize(data=nil)
-    @song_name = "Blank"
-		@num_channels = 4
-		@num_instruments = 1
-		@num_patterns = 1
-		@sequence_length = 1
-		@default_speed = 6
-		@default_tempo = 125
-		@sequence = []		
-		@patterns = [] #[Pattern.new]
-		#@pattern.num_rows = 64
-		#@pattern.data = [] #[ pattern.num_rows * num_channels * 5 ]
-		@instruments =[]#[Instrument.new]# new Instrument[ num_instruments + 1 ];
-		#instruments[ 0 ] = instruments[ 1 ] = new Instrument(); 
-		load_mod data if data
+  #require 'xm/pattern'
+  #require 'xm/instrument'
+  require 'buffer_mapper'
+  
+  include Raumod::BufferMapper
+  
+  def data_map
+    { 
+      :id_text=>{ :offset=> 0, :type=>'s17'},
+      :name=>{:offset=>17,:type=>'s20'},
+      :'1a' => {:offset=> 37, :type=>'C'},
+      :tracker_name=>{:offset=>38,:type=>'s20'},
+      :version=> {:offset=> 58, :type=> 'v'},
+      :header_size=>{:offset=> 60,:type=>'V'},
+      :song_length=>{:offset=> 64,:type=>'v'},
+      :restart_position=>{:offset=> 66 ,:type=>'v'},
+      :channel_count=>{:offset=> 68 ,:type=>'v'},
+      :pattern_count=>{:offset=> 70 ,:type=>'v'},
+      :instrument_count =>{:offset=> 72 ,:type=>'v'},
+      :flags =>{:offset=> 74 ,:type=>'v'},
+      :default_tempo=>{:offset=> 76 ,:type=>'v'},
+      :default_bpm=>{:offset=> 78 ,:type=>'v'}
+      
+      
+    }
   end
   
-  def load_mod(data)
+  def initialize(data=nil)
+    @data= data || "Extended Module: "
     raise 'Not an XM file!' unless data[0..16].match(/^Extended Module: /)
+    
+  end
+  
+  
+  
+  ## VÄCK! 
+  def load_mod(data)
+    
     @song_name = data[17..36].gsub("\000",'')
     raise 'XM format version must be 0x0104' unless ushort(data,58) == 0x104
     delta_env = data[38..57] == 'DigiBooster Pro'
