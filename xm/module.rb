@@ -1,6 +1,6 @@
 class Raumod::XM::Module
   require 'xm/pattern'
-  #require 'xm/instrument'
+  require 'xm/instrument'
   require 'buffer_mapper'
   include Raumod::BufferMapper
   
@@ -21,32 +21,46 @@ class Raumod::XM::Module
     :default_bpm=>{:offset=> 78 ,:type=>'v'}
   }
 
-  attr_accessor :patterns
+  attr_accessor :patterns,:instruments
   def initialize(data=nil)
     @data= data #|| "Extended Module: "
     @data_map = HeaderMap
     raise 'Not an XM file!' unless data[0..16].match(/^Extended Module: /)
+    raise 'XM format version must be 0x0104' unless ushort(data,58) == 0x104
+    
+    offset=60+header_size
     
     @patterns=[]
-    offset=60+header_size
     pattern_count.times do |i|      
       pattern = Raumod::XM::Pattern.new(data[offset..-1])
       offset+= pattern.byte_size
       @patterns << pattern      
     end
+    
+    @instruments=[]
+    instrument_count.times do |i|      
+      instrument = Raumod::XM::Instrument.new(data[offset..-1])
+      offset+= instrument.byte_size
+      @instruments << instrument
+    end
+    
   end
   
   def inspect
-    %Q{#<Raumod::XM::Module: name="#{name}"}
+    %Q{#<Raumod::XM::Module: name="#{name}" length="#{song_length}" bpm="#{default_bpm}" tempo="#{default_tempo}" patterns="#{patterns.count}" instruments="#{instruments.count}" > }
   end
   def sequence
     # sequence data is located @80 offset
-    up=''
-    song_length.times{ up << 'C' }
-    @data[80..336].unpack(up)
+    @data[80..336].unpack(song_length.times.map{'C'}.join)
+  end
+  def self.load(file)
+    File.open(file,'rb') do|f|
+      Raumod::XM::Module.new(f.read)
+    end
   end
   
-  ## VÄCK! 
+  
+  # to be deleted
   def load_mod(data)
     
     @song_name = data[17..36].gsub("\000",'')

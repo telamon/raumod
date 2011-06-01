@@ -1,4 +1,7 @@
 module Raumod::BufferMapper
+  # See http://ruby-doc.org/core/classes/String.html#M001112
+  # for map types.
+  
   def data_map;@data_map;end
   def data;@data;end
   def data_entry(method)

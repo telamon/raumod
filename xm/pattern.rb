@@ -11,6 +11,7 @@ class Raumod::XM::Pattern
   def initialize(data)
     @data=data
     @data_map=HeaderMap
+    @data=data[0..byte_size] #slice off unecessary data.
   end
   def byte_size
     header_size+data_size
