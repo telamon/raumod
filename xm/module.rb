@@ -1,38 +1,50 @@
 class Raumod::XM::Module
-  #require 'xm/pattern'
+  require 'xm/pattern'
   #require 'xm/instrument'
   require 'buffer_mapper'
-  
   include Raumod::BufferMapper
   
-  def data_map
-    { 
-      :id_text=>{ :offset=> 0, :type=>'s17'},
-      :name=>{:offset=>17,:type=>'s20'},
-      :'1a' => {:offset=> 37, :type=>'C'},
-      :tracker_name=>{:offset=>38,:type=>'s20'},
-      :version=> {:offset=> 58, :type=> 'v'},
-      :header_size=>{:offset=> 60,:type=>'V'},
-      :song_length=>{:offset=> 64,:type=>'v'},
-      :restart_position=>{:offset=> 66 ,:type=>'v'},
-      :channel_count=>{:offset=> 68 ,:type=>'v'},
-      :pattern_count=>{:offset=> 70 ,:type=>'v'},
-      :instrument_count =>{:offset=> 72 ,:type=>'v'},
-      :flags =>{:offset=> 74 ,:type=>'v'},
-      :default_tempo=>{:offset=> 76 ,:type=>'v'},
-      :default_bpm=>{:offset=> 78 ,:type=>'v'}
-      
-      
-    }
-  end
-  
+  HeaderMap = { 
+    :id_text=>{ :offset=> 0, :type=>'A17'},
+    :name=>{:offset=>17,:type=>'A20'},
+    :'1a' => {:offset=> 37, :type=>'C'},
+    :tracker_name=>{:offset=>38,:type=>'A20'},
+    :version=> {:offset=> 58, :type=> 'v'},
+    :header_size=>{:offset=> 60,:type=>'V'},
+    :song_length=>{:offset=> 64,:type=>'v'},
+    :restart_position=>{:offset=> 66 ,:type=>'v'},
+    :channel_count=>{:offset=> 68 ,:type=>'v'},
+    :pattern_count=>{:offset=> 70 ,:type=>'v'},
+    :instrument_count =>{:offset=> 72 ,:type=>'v'},
+    :flags =>{:offset=> 74 ,:type=>'v'},
+    :default_tempo=>{:offset=> 76 ,:type=>'v'},
+    :default_bpm=>{:offset=> 78 ,:type=>'v'}
+  }
+
+  attr_accessor :patterns
   def initialize(data=nil)
-    @data= data || "Extended Module: "
+    @data= data #|| "Extended Module: "
+    @data_map = HeaderMap
     raise 'Not an XM file!' unless data[0..16].match(/^Extended Module: /)
     
+    @patterns=[]
+    offset=60+header_size
+    pattern_count.times do |i|      
+      pattern = Raumod::XM::Pattern.new(data[offset..-1])
+      offset+= pattern.byte_size
+      @patterns << pattern      
+    end
   end
   
-  
+  def inspect
+    %Q{#<Raumod::XM::Module: name="#{name}"}
+  end
+  def sequence
+    # sequence data is located @80 offset
+    up=''
+    song_length.times{ up << 'C' }
+    @data[80..336].unpack(up)
+  end
   
   ## VÄCK! 
   def load_mod(data)
@@ -50,13 +62,7 @@ class Raumod::XM::Module
       @sequence[i] = entry < num_patterns ? entry : 0      
     end
     @patterns=[]
-    bytes_read=data_offset
-    @num_patterns.times do |i|      
-      pattern = Raumod::XM::Pattern.new
-      puts "Loading pattern @#{bytes_read}"
-      bytes_read+=pattern.load_bin(data[bytes_read..-1])
-      @patterns << pattern      
-    end
+    
     @instruments=[]
     @num_instruments.times do |i|
       instrument = Raumod::XM::Instrument.new
